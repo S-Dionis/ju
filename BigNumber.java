@@ -1,9 +1,10 @@
 package com.company;
 
-public class BigNumber {
+public class BigNumber implements Comparable {
 
     public final String value;
     private final Boolean isNegative;
+    private final int length;
 
     public BigNumber(String number) {
         if (number.isBlank()) {
@@ -21,27 +22,37 @@ public class BigNumber {
             this.isNegative = false;
             this.value = number;
         }
+
+        this.length = value.length();
     }
 
-    public BigNumber add(BigNumber other) {
-        int max = Math.max(value.length(), other.value.length());
-        int[] result = new int[max + 1];
+    public BigNumber plus(BigNumber other) {
+        int max = Math.max(length, other.length);
+        int maxLen = max + 1;
+        int[] result = new int[maxLen];
         int addition = 0;
 
-        for (int i = max - 1; i >= 0; i--) {
+        int itOffset = maxLen - length;
+        int otherOffset = maxLen - other.length;
+
+        for (int i = maxLen - 1; i >= 0; i--) {
+
+            int iIt = i - itOffset;
+            int iOther = i - otherOffset;
+
             int sum = addition;
-            int thisNum = Character.getNumericValue(value.length() > i ? value.charAt(i) : 0);
-            int otherNum = Character.getNumericValue(other.value.length() > i ? other.value.charAt(i) : 0);
+            int thisNum = iIt < 0 ? 0 : Character.getNumericValue(value.charAt(iIt));
+            int otherNum = iOther < 0 ? 0 : Character.getNumericValue(other.value.charAt(iOther));
 
             thisNum = isNegative ? -thisNum : thisNum;
             otherNum = other.isNegative ? -otherNum : otherNum;
+
             sum += thisNum + otherNum;
+
             addition = sum / 10;
             sum = sum % 10;
-            result[i + 1] = sum;
+            result[i] = sum;
         }
-
-        if (addition != 0) result[0] += addition;
 
         int firstNonZeroInt = -1;
         for (int i = 0; i < max; i++) {
@@ -71,12 +82,95 @@ public class BigNumber {
         return isNegative ? "-" + value : value;
     }
 
-    public static void main(String[] args) {
-        BigNumber bigNumberA = new BigNumber("-77777");
-        BigNumber bigNumberB = new BigNumber("-44444");
 
-        BigNumber add = bigNumberA.add(bigNumberB);
-        System.out.println();
+    private static BigNumber bigNumberA;
+    private static BigNumber bigNumberB;
+    private static BigNumber actual;
+    private static BigNumber expected;
+
+    public static void main(String[] args) throws Exception {
+        singleTest();
+        //tests();
     }
 
+    private static final void singleTest() {
+
+        bigNumberA = new BigNumber("100");
+        bigNumberB = new BigNumber("-97");
+        actual = bigNumberA.plus(bigNumberB);
+        expected = new BigNumber(String.valueOf(100 + -97));
+        assertEquals(actual.toString(), expected.toString());
+    }
+
+    private static final void tests() {
+
+        bigNumberA = new BigNumber("-21");
+        bigNumberB = new BigNumber("-9");
+        actual = bigNumberA.plus(bigNumberB);
+        expected = new BigNumber(String.valueOf(-21 + -9));
+        assertEquals(actual.toString(), expected.toString());
+
+        bigNumberA = new BigNumber("12");
+        bigNumberB = new BigNumber("39");
+        actual = bigNumberA.plus(bigNumberB);
+        expected = new BigNumber(String.valueOf(12 + 39));
+        assertEquals(actual.toString(), expected.toString());
+
+        bigNumberA = new BigNumber("-7");
+        bigNumberB = new BigNumber("27");
+        actual = bigNumberA.plus(bigNumberB);
+        expected = new BigNumber(String.valueOf(-7 + 27));
+        assertEquals(actual.toString(), expected.toString());
+
+        bigNumberA = new BigNumber("34");
+        bigNumberB = new BigNumber("-999");
+        actual = bigNumberA.plus(bigNumberB);
+        expected = new BigNumber(String.valueOf(34 + -999));
+        assertEquals(actual.toString(), expected.toString());
+
+
+        bigNumberA = new BigNumber("100");
+        bigNumberB = new BigNumber("-97");
+        actual = bigNumberA.plus(bigNumberB);
+        expected = new BigNumber(String.valueOf(100 + -97));
+        assertEquals(actual.toString(), expected.toString());
+
+
+        bigNumberA = new BigNumber("0");
+        bigNumberB = new BigNumber("100009");
+        actual = bigNumberA.plus(bigNumberB);
+        expected = new BigNumber(String.valueOf(0 + 100009));
+        assertEquals(actual.toString(), expected.toString());
+
+
+        bigNumberA = new BigNumber("-0");
+        bigNumberB = new BigNumber("111");
+        actual = bigNumberA.plus(bigNumberB);
+        expected = new BigNumber(String.valueOf(-0 + 111));
+        assertEquals(actual.toString(), expected.toString());
+    }
+
+    private static <T extends Comparable<T>> void assertEquals(T a, T b) {
+        if (a.compareTo(b) != 0) {
+            System.out.println(("Assertion FAILED"));
+            System.out.println(a + " not equals " + b);
+            System.out.println();
+        } else {
+            System.out.println(("Assertion PASS"));
+            System.out.println(a + " equals " + b);
+            System.out.println();
+        }
+
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        if (o == null) {
+            return -1;
+        }
+        BigNumber bigNumber = o instanceof BigNumber ? ((BigNumber) o) : null;
+        if (bigNumber == null) return -1;
+
+        return this.value.compareTo(bigNumber.value);
+    }
 }
