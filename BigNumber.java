@@ -40,29 +40,32 @@ public class BigNumber implements Comparable {
             int iIt = i - itOffset;
             int iOther = i - otherOffset;
 
-            int sum = addition;
-            int thisNum = iIt < 0 ? 0 : Character.getNumericValue(value.charAt(iIt));
+            int sum = 0;
+            int thisNum = (iIt < 0 ? 0 : Character.getNumericValue(value.charAt(iIt))) + addition;
             int otherNum = iOther < 0 ? 0 : Character.getNumericValue(other.value.charAt(iOther));
 
-            thisNum = isNegative ? -thisNum : thisNum;
-            otherNum = other.isNegative ? -otherNum : otherNum;
+            if (isNegative ^ other.isNegative && thisNum < otherNum) {
+                thisNum += 10;
+                sum += (isNegative ? -thisNum : thisNum) + (other.isNegative ? -otherNum : otherNum);
+                addition = -1;
+            } else {
+                sum += (isNegative ? -thisNum : thisNum) + (other.isNegative ? -otherNum : otherNum);
+                addition = sum / 10;
+            }
 
-            sum += thisNum + otherNum;
-
-            addition = sum / 10;
             sum = sum % 10;
             result[i] = sum;
         }
 
         int firstNonZeroInt = -1;
-        for (int i = 0; i < max; i++) {
+        for (int i = 0; i < maxLen; i++) {
             if (result[i] != 0) {
                 firstNonZeroInt = i;
                 break;
             }
         }
 
-        int[] ints = new int[max + 1 - firstNonZeroInt];
+        int[] ints = new int[maxLen - firstNonZeroInt];
         System.arraycopy(result, firstNonZeroInt, ints, 0, ints.length);
 
         StringBuilder sb = new StringBuilder();
@@ -90,7 +93,7 @@ public class BigNumber implements Comparable {
 
     public static void main(String[] args) throws Exception {
         singleTest();
-        //tests();
+        tests();
     }
 
     private static final void singleTest() {
@@ -98,7 +101,7 @@ public class BigNumber implements Comparable {
         bigNumberA = new BigNumber("100");
         bigNumberB = new BigNumber("-97");
         actual = bigNumberA.plus(bigNumberB);
-        expected = new BigNumber(String.valueOf(100 + -97));
+        expected = new BigNumber(String.valueOf(100 + - 97));
         assertEquals(actual.toString(), expected.toString());
     }
 
