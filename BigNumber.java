@@ -26,31 +26,52 @@ public class BigNumber implements Comparable {
         this.length = value.length();
     }
 
+    private int charAt(int i) {
+        return Character.getNumericValue(value.charAt(i));
+    }
+
     public BigNumber plus(BigNumber other) {
-        int max = Math.max(length, other.length);
-        int maxLen = max + 1;
+        BigNumber it = this;
+
+        if (it.length < other.length) {
+            it = other;
+            other = this;
+        } else if (length == other.length) {
+            for (int i = 0; i < length; i++) {
+                if (other.charAt(i) > it.charAt(i)) {
+                    it = other;
+                    other = this;
+                }
+            }
+        }
+
+        return plus(it, other);
+    }
+
+    private BigNumber plus(BigNumber it, BigNumber other) {
+        int maxLen = it.length + 1;
         int[] result = new int[maxLen];
+        int itOffset = maxLen - it.length;
+        int otherOffset = maxLen - other.length;
         int addition = 0;
 
-        int itOffset = maxLen - length;
-        int otherOffset = maxLen - other.length;
-
         for (int i = maxLen - 1; i >= 0; i--) {
-
             int iIt = i - itOffset;
             int iOther = i - otherOffset;
-
             int sum = 0;
-            int thisNum = (iIt < 0 ? 0 : Character.getNumericValue(value.charAt(iIt))) + addition;
-            int otherNum = iOther < 0 ? 0 : Character.getNumericValue(other.value.charAt(iOther));
+            int absThisNum = (iIt < 0 ? 0 : it.charAt(iIt)) + addition;
+            int absOtherNum = iOther < 0 ? 0 : other.charAt(iOther);
 
-            if (isNegative ^ other.isNegative && thisNum < otherNum) {
+            int thisNum = it.isNegative ? -absThisNum : absThisNum;
+            int otherNum = other.isNegative ? -absOtherNum : absOtherNum;
+
+            if (absThisNum < absOtherNum && (other.isNegative ^ it.isNegative)) {
                 thisNum += 10;
-                sum += (isNegative ? -thisNum : thisNum) + (other.isNegative ? -otherNum : otherNum);
                 addition = -1;
+                sum += thisNum + otherNum;
             } else {
-                sum += (isNegative ? -thisNum : thisNum) + (other.isNegative ? -otherNum : otherNum);
-                addition = sum / 10;
+                sum += thisNum + otherNum;
+                addition = Math.abs(sum / 10);
             }
 
             sum = sum % 10;
@@ -92,17 +113,7 @@ public class BigNumber implements Comparable {
     private static BigNumber expected;
 
     public static void main(String[] args) throws Exception {
-        singleTest();
         tests();
-    }
-
-    private static final void singleTest() {
-
-        bigNumberA = new BigNumber("100");
-        bigNumberB = new BigNumber("-97");
-        actual = bigNumberA.plus(bigNumberB);
-        expected = new BigNumber(String.valueOf(100 + - 97));
-        assertEquals(actual.toString(), expected.toString());
     }
 
     private static final void tests() {
